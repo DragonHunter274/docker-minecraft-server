@@ -28,19 +28,34 @@ if isTrue "${REMOVE_OLD_MODS}" && [ -z "${MODS_FILE}" ]; then
 fi
 
 function handlePackwiz() {
-  # If packwiz url passed, bootstrap packwiz and update mods before other modpack processing
+  # If PACKWIZ_URL is provided, bootstrap packwiz and update mods before other modpack processing
   if [[ "${PACKWIZ_URL:-}" ]]; then
-    if ! packwizInstaller=$(mc-image-helper maven-download \
-                           --maven-repo=https://maven.packwiz.infra.link/repository/release/ \
-                           --group=link.infra.packwiz --artifact=packwiz-installer --classifier=dist \
-                           --skip-existing); then
+    # GitHub repository details
+    owner="DragonHunter274"
+    repo="pwinstaller"
+
+    # Fetch the latest release version using GitHub API
+    latest_release_url="https://api.github.com/repos/${owner}/${repo}/releases/latest"
+    release_info=$(curl -s "$latest_release_url")
+
+    # Extract the tag name from the release info
+    latest_version=$(echo "$release_info" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
+
+    # Construct the URL to download the installer
+    installer_url="https://github.com/${owner}/${repo}/releases/download/${latest_version}/packwiz-installer"
+
+    # Define the output file name
+    output_file="packwiz-installer"
+
+    # Download the file
+    if ! curl -L -o "$output_file" "$installer_url"; then
       log "ERROR: failed to get packwiz installer"
       exit 1
     fi
 
     log "Running packwiz installer against URL: ${PACKWIZ_URL}"
-    if ! java -cp "${packwizInstaller}" link.infra.packwiz.installer.Main -s server "${PACKWIZ_URL}"; then
-      log "ERROR failed to run packwiz installer"
+    if ! java -cp "${output_file}" link.infra.packwiz.installer.Main -s server "${PACKWIZ_URL}"; then
+      log "ERROR: failed to run packwiz installer"
       exit 1
     fi
   fi
