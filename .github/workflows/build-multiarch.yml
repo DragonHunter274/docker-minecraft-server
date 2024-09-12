@@ -13,13 +13,14 @@ on:
       - "notes/**"
       - "kustomize/**"
 
-permissions:
-  packages: write
-  contents: read
+
 
 
 jobs:
   build:
+    permissions:
+      packages: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
