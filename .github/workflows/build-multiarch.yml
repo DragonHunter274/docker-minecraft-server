@@ -13,6 +13,11 @@ on:
       - "notes/**"
       - "kustomize/**"
 
+permissions:
+  packages: write
+  contents: read
+
+
 jobs:
   build:
     strategy:
