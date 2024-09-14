@@ -41,15 +41,21 @@ function handlePackwiz() {
     # Extract the tag name from the release info
     latest_version=$(echo "$release_info" | grep '"tag_name":' | sed -E 's/.*"tag_name": "([^"]+)".*/\1/')
 
-    # Construct the URL to download the installer
-    installer_url="https://github.com/${owner}/${repo}/releases/download/${latest_version}/packwiz-installer"
+    # Extract the download URL for the packwiz-installer.jar from the release assets
+    jar_url=$(echo "$release_info" | grep '"browser_download_url":' | grep 'packwiz-installer.*\.jar' | sed -E 's/.*"browser_download_url": "([^"]+)".*/\1/')
+
+    # Check if the JAR download URL was found
+    if [[ -z "$jar_url" ]]; then
+      log "ERROR: failed to find the packwiz-installer JAR in the latest release"
+      exit 1
+    fi
 
     # Define the output file name
-    output_file="packwiz-installer"
+    output_file="packwiz-installer.jar"
 
-    # Download the file
-    if ! curl -L -o "$output_file" "$installer_url"; then
-      log "ERROR: failed to get packwiz installer"
+    # Download the JAR file
+    if ! curl -L -o "$output_file" "$jar_url"; then
+      log "ERROR: failed to download packwiz installer JAR"
       exit 1
     fi
 
@@ -60,6 +66,7 @@ function handlePackwiz() {
     fi
   fi
 }
+
 
 function handleModpackZip() {
 # If supplied with a URL for a modpack (simple zip of jars), download it and unpack
